@@ -26,13 +26,13 @@ async function createUser(name, email, hashedPassword){
 }
 
 
-// funtion to check if the userExists in the DB and returns "hashedPassword" of that user
-// It returns either hashedPassword or Null
+// funtion to check if the userExists in the DB
+// // It returns either the user or Null
 async function emailExistsAndPassword(email){
     const result = await pool.query("SELECT * FROM users WHERE email = $1;", [email])
     
     if(result.rowCount > 0){
-        return result.rows[0].password;
+        return result.rows[0];
     }else{
         return null;
     }

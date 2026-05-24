@@ -1,16 +1,24 @@
+require('dotenv').config();
+const jwt = require("jsonwebtoken");
+
+
 const { emailExistsAndPassword } = require("../../db/Queries/authQuery");
 const { comparePassword } = require("../../utils/password");
 
 // regex to check for a valid email address
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const jwtSecret = process.env.JWT_SECRET;
 
+if (!jwtSecret) {
+  throw new Error("JWT_SECRET not defined in .env");
+}
 
 async function signIn(req, res){
     try {
         // get the required parameters from the request body as provided in JSON format
         const email = req.body.email;
         const password = req.body.password;
-         
+
         if(!email || !password){
             return res.status(400).json({
                 res: "Provide All Required Inputs"
@@ -30,14 +38,19 @@ async function signIn(req, res){
                 res: "User Does Not Exists"
             })
         }else{
-            const passwordMatch = await comparePassword(password, result);
+            const passwordMatch = await comparePassword(password, result.password);
             if(passwordMatch){
 
-
-                // todo -> ASSIGN LOGIN TOKEN
-
+                const token = jwt.sign({
+                    data: {
+                        uid: result.id
+                    },
+                    exp: Math.floor(Date.now() / 1000) + (120 * 60) 
+                }, jwtSecret)
                 
-                return res.status(200).json({
+                    
+
+                return res.cookie("auth", token).status(200).json({
                     res: "User Signed In Successfully",
                 })
             }else{
