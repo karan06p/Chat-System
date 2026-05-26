@@ -12,6 +12,7 @@ async function signUp(req, res){
         const name = req.body.name;
         const password = req.body.password;
     
+        // if any parameter is not received, return
         if(!email || !name || !password){
             return res.status(400).json({
                 res: "Provide All Required Inputs"

@@ -19,6 +19,7 @@ async function signIn(req, res){
         const email = req.body.email;
         const password = req.body.password;
 
+        // if any parameter is not received, return
         if(!email || !password){
             return res.status(400).json({
                 res: "Provide All Required Inputs"
@@ -33,30 +34,40 @@ async function signIn(req, res){
         
         // check if the user is applicable for login by checking if email already exists
         const result = await emailExistsAndPassword(email);
-        if(result === null){
-            return res.status(201).json({
-                res: "User Does Not Exists"
-            })
-        }else{
-            const passwordMatch = await comparePassword(password, result.password);
-            if(passwordMatch){
 
-                const token = jwt.sign({
-                    data: {
+        if(result === null){
+            return res.status(401).json({
+                res: "Invalid Credentials"
+            });
+        }
+        else{ 
+            const passwordMatch = await comparePassword(password, result.password);
+
+            if(passwordMatch){
+                // Generate jwt token to store in cookies for auth
+                const token = jwt.sign(
+                    {
                         uid: result.id
                     },
-                    exp: Math.floor(Date.now() / 1000) + (120 * 60) 
-                }, jwtSecret)
+                    jwtSecret,
+                    {
+                        expiresIn: "1d" // this token expires in 1 day(24hrs)
+                    }
+                    
+            )
                 
                     
 
                 return res.cookie("auth", token).status(200).json({
                     res: "User Signed In Successfully",
                 })
-            }else{
+            }
+            else{ // If password is incorrect
+
                 return res.status(401).json({
                     res: "Invalid Credentials",
-                })
+                });
+
             }
         }
 
